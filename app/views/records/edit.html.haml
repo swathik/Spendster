@@ -1,0 +1,56 @@
+%div.wrapper
+  .middle-bar
+    %ul.breadcrumb
+      %li= link_to 'Archives', archives_path
+      |
+      %li= link_to 'Export', records_path(format: 'csv')
+      |
+      %li All Budget Lists
+    .span10
+      %small Note, editing a record will not affect already added spends.
+      %div{class: 'alert alert-error hide', id: 'record_error'}
+
+      #email_template{style: 'display:none'}
+        .criteria
+          = text_field_tag 'emails[INDEX]', params[:emails], placeholder: 'yourfriend@example.com'
+          = image_tag 'minus_icon.png', class: 'email_minus_button', alt: 'remove'
+
+      #template{style: 'display:none'}
+        .criteria
+          = text_field_tag 'category_limits[INDEX[name]]', params[:category_names], placeholder: 'Food'
+          = text_field_tag 'category_limits[INDEX[limit]]', params[:category_limits], class: 'input-small', placeholder: '50.0'
+          = image_tag 'minus_icon.png', class: 'minus_button', alt: 'remove'
+
+      %p
+        = form_tag(record_path(@record), :method => :put, remote: true, id: 'edit_record', class: 'well') do
+          %label
+          Name:
+          = text_field_tag 'name', @record.name
+  
+          %div.category_row
+            = image_tag 'grey_plus.png', class: 'plus_button', alt: 'add'
+    
+            .category_limits
+              - index = 0
+              = hidden_field_tag 'index', @category_names_limits.size
+              - @category_names_limits.each do |category|
+                .criteria
+                  = text_field_tag "category_limits[#{index}[name]]", category.keys.first
+                  = text_field_tag "category_limits[#{index}[limit]]", category.values.first, class: 'input-small'
+                  = image_tag 'minus_icon.png', class: 'minus_button', alt: 'remove'
+                  - index = index + 1
+  
+          %div.email_row
+            = image_tag 'grey_plus.png', class: 'email_plus_button', alt: 'add'
+            .user_emails
+              - email_index = 0
+              = hidden_field_tag 'email_index', @user_emails.size
+              - @user_emails.each do |email|
+                .criteria
+                  = text_field_tag "emails[#{index}]", email
+                  = image_tag 'minus_icon.png', class: 'email_minus_button', alt: 'remove'
+                  - email_index = email_index + 1
+  
+          %br
+          = link_to 'Back', records_path, class: 'btn btn-mini btn-warning'
+          = submit_tag 'Update', class: 'btn btn-mini btn-info'

@@ -1,0 +1,107 @@
+%div.wrapper
+  .left-bar
+    %p
+      %h2 Add Spend Period
+      = form_tag record_spend_periods_path(@record), class: 'well sidebar-form', id: 'new_record_spend_period', remote: true do
+        %div{class: 'alert alert-error hide', id: 'period_error'}
+        %label Start Date
+        %input{:name => "start_date_picker", :type => "date"}
+        %label End Date
+        %input{:name => "end_date_picker", :type => "date"}
+        %br
+        = submit_tag 'Create', class: 'btn btn-mini btn-info'
+
+  .right-bar
+    %ul.breadcrumb
+      %li= link_to 'All Budget Lists', records_path
+      >
+      %li.active= "#{@record.name}"
+      %span
+        = link_to 'Archives', archives_path
+        |
+        = link_to 'Export', record_path(@record, format: 'csv')
+    .span10
+      - if @spend_periods.blank?
+        .alert.alert-block.alert-info
+          %button.close{"data-dismiss" => "alert", :type => "button"} ×
+          %h4 Spend Time period
+          Hello there, looks like you have not set any spend time period. Please
+          choose start date and end date for your spend time.
+      - else
+        %table{ class: 'table table-hover spend_period'}
+          %thead
+            %th Start date
+            %th End date
+            %th Total spent
+            %th Total limit
+            %th 
+            %th 
+          %tbody
+            - @spend_periods.each do |period|
+              - class_exceeded = period.total_amount - period.total_spent < 0 ? 'limit-exceeded' : 'limit-control'
+              - class_archived = period.archived ? 'spend_period_archived' : ''
+              %tr{class: "#{class_archived}"}
+                %td{ class: "#{class_exceeded}"}
+                  = friendly_date(period.start_date.to_s)
+                %td= friendly_date(period.end_date.to_s)
+                %td.amount= number_to_currency(period.total_spent, :unit => currency[@record.currency])
+                %td.amount= number_to_currency(period.total_amount, :unit => currency[@record.currency])
+                - if period.archived
+                  %td
+                    = image_tag 'archive.png', alt: 'archive', title: "Archived", class: 'tool_tip'
+                    = link_to "Archived", archives_path
+                - else
+                  %td
+                    = image_tag 'current.png', alt: 'current', title: "Current spends", class: 'tool_tip'
+                    = link_to "View spends", record_spend_period_path(@record, period)
+                %td= link_to 'x', record_spend_period_path(@record, period), :method => :delete, :data => { :confirm => 'Are you sure you want to delete?' }, class: 'close'
+
+    .span10
+      #accordion2.accordion
+        .accordion-group
+          .accordion-heading
+            %a.accordion-toggle{"data-parent" => "#accordion2", "data-toggle" => "collapse", :href => "#collapseOne"}
+              = image_tag 'toggle1.png', class: 'tool_tip', title: 'Toggle Budget list'
+          #collapseOne.accordion-body.collapse.in
+            .accordion-inner
+
+              = link_to 'Edit Budget List', '', id: 'toggle_show_edit_record'
+              %div{class: 'edit_record_div hide'}
+                %p
+                  %div{class: 'alert alert-error hide', id: 'record_error'}
+
+                  #template{style: 'display:none'}
+                    .criteria
+                      = text_field_tag 'category_limits[INDEX[name]]', params[:category_names], placeholder: 'Category name'
+                      = text_field_tag 'category_limits[INDEX[limit]]', params[:category_limits], class: 'input-small', placeholder: 'Category limit'
+                      = image_tag 'minus_icon.png', class: 'minus_button', alt: 'remove'
+
+                  %p
+                    = form_tag(record_path(@record), :method => :put, remote: true, id: 'edit_record', class: 'well') do
+                      = hidden_field_tag 'name', @record.name
+
+                      %div.category_row
+                        = image_tag 'grey_plus.png', class: 'plus_button', alt: 'add'
+
+                        .category_limits
+                          - index = 0
+                          = hidden_field_tag 'index', @category_names_limits.size
+                          - @category_names_limits.each do |category|
+                            .criteria
+                              = text_field_tag "category_limits[#{index}[name]]", category.keys.first
+                              = text_field_tag "category_limits[#{index}[limit]]", category.values.first, class: 'input-small', id: 'appendedPrependedInput'
+                              = image_tag 'minus_icon.png', class: 'minus_button', alt: 'remove'
+                              - index = index + 1
+                      %br
+                      = submit_tag 'Update', class: 'btn btn-mini btn-info'
+
+              %table{ class: 'table table-hover show_record'}
+                %tbody
+                  - @record.category_and_limits.each do |r|
+                    %tr
+                      %td= r.keys.first
+                      %td= number_to_currency(r.values.first, :unit => currency[@record.currency])
+                  %tr.total_amount
+                    %td Total
+                    %td= number_to_currency(total_amount(@record), :unit => currency[@record.currency])
+

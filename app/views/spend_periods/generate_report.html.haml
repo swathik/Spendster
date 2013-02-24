@@ -1,0 +1,26 @@
+:javascript
+  var report = #{@data} 
+  google.load("visualization", "1", {packages:["corechart"]});
+  google.setOnLoadCallback(drawChart);
+  function drawChart() {
+    var data = google.visualization.arrayToDataTable(report);
+
+    var options = {
+      title: 'Spend Activity'
+    };
+
+    var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+    chart.draw(data, options);
+  }
+%div.wrapper
+  .middle-bar
+    %ul.breadcrumb
+      %li
+        = link_to 'All Budget Lists', records_path
+        >
+      %li
+        = link_to 'Spends', record_spend_period_path(@record, @spend_period)
+        >
+      %li.active Report
+    #chart_div{:style => "width: 900px; height: 500px;"}
+    

@@ -1,0 +1,41 @@
+%div.wrapper
+  .left-bar
+    %p
+      = render :template => 'records/new'
+                
+  .right-bar
+    %ul.breadcrumb
+      %li All Budget Lists
+      %span
+        %li= link_to 'Archives', archives_path
+        |
+        %li= link_to 'Export', records_path(format: 'csv')
+        
+    .span6
+      - if @records.empty?
+        .alert.alert-block.alert-info
+          %button.close{"data-dismiss" => "alert", :type => "button"} ×
+          %h4 Budget List
+          Hello there, looks like you have not set up any budget list yet. Please
+          create a budget list to add your expenditure.
+      - else
+        %table{ class: 'table table-hover', id: 'records_list'}
+          %thead
+            %tr
+              %th Name
+              %th Actions
+          %tbody
+            - @records.each do |record|
+              - shared_users = record.get_shared_users.join(', ')
+              - number_of_spend_periods = pluralize(record.spend_periods.count, 'Spend period')
+              - record_data = "<p>#{number_of_spend_periods}<br />Shared with #{shared_users}</p>"
+              %tr
+                %td
+                  = image_tag 'info2.png', class: 'popinfo', rel: 'popover', href: '#', "data-content" => record_data, "data-original-title" => record.name
+                  - if record.shared?
+                    = image_tag 'users.png', alt: 'shared record', title: "Shared", class: 'tool_tip'
+                  
+                  = link_to record.name, record_path(record.id)
+                %td
+                  = link_to image_tag('edit.png'), edit_record_path(record), class: 'tool_tip', title: 'Edit this record'
+                  = link_to 'x', record_path(record.id), :method => :delete, class: 'tool_tip close', title: 'Delete this record', :data => { :confirm => 'Are you sure you want to delete?' }

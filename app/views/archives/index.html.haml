@@ -1,0 +1,53 @@
+%div.wrapper
+  .middle-bar
+    %ul.breadcrumb
+      %li
+        = link_to 'All Budget Lists', records_path
+        >
+      %li
+        = link_to 'Back', :back
+        >
+      %li.active Archives
+
+    - i = 1
+    - unless @archives.blank?
+      - @archives.each do |archive|
+        - name       = archive.record_name
+        - users      = archive.get_users(archive.user_emails).join(', ')
+        - start_date = friendly_date(archive.start_date.to_s)
+        - end_date   = friendly_date(archive.end_date.to_s)
+        - total_spent = archive.total_spent
+        #accordion2.accordion
+          .accordion-group
+            %a.accordion-toggle{"data-parent" => "#accordion2", "data-toggle" => "collapse", :href => "#collapse#{i}"}
+              %div.archive_data
+                %div{class: 'alert alert-info'}
+                  = "#{name}: "
+                  %span.date_time
+                    = start_date
+                  ="-"
+                  %span.date_time
+                    = end_date
+                  Total spent
+                  %span.amount
+                    = number_to_currency(total_spent)
+            .collapse.in{ id: "collapse#{i}"}
+              - i = i + 1
+              %table{ class: 'table archive_table'}
+                %thead
+                %tbody
+                  - archive.spends.each do |spend|
+                    %tr
+                      %td= spend["category_name"]
+                      %td= number_to_currency(spend["category_limit"])
+                      %td
+                        %table
+                          %tbody
+                            - spend["spends_over_period"].each do |sp|
+                              %tr
+                                %td= archive.get_user_name(sp["user"])
+                                %td= number_to_currency(sp["amount"])
+                                %td= friendly_date(sp["created_at"].to_s)
+
+      = paginate @archives
+               

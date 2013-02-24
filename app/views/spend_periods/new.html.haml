@@ -1,0 +1,7 @@
+.page-header
+  Choose Spend Period
+  
+%p
+  = form_tag record_spend_periods_path, class: 'well', id: 'new_record_spend_period' do
+    = select_tag 'period', options_for_select(['Monthly', 'Yearly'])
+    = submit_tag 'Create'

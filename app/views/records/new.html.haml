@@ -1,0 +1,35 @@
+#email_template.hide
+  .criteria
+    = text_field_tag 'emails[INDEX]', params[:emails], placeholder: 'yourfriend@example.com'
+    = image_tag 'minus_icon.png', class: 'email_minus_button', alt: 'remove'
+    
+
+#template.hide
+  .criteria
+    = text_field_tag 'category_limits[INDEX[name]]', params[:category_names], class: 'input-small', placeholder: 'Food'
+    = text_field_tag 'category_limits[INDEX[limit]]', params[:category_limits], class: 'input-small', placeholder: '50.0'
+    = image_tag 'minus_icon.png', class: 'minus_button', alt: 'remove'
+    
+  
+%p
+  %h2 Create Budget List
+  = form_tag records_path, class: 'well sidebar-form', id: 'new_record', remote: true do
+    %div{class: 'alert alert-error hide', id: 'record_error'}
+    %label{ class: 'tool_tip', title: 'Give a name to your budget list'} Name
+    = text_field_tag 'name', params[:name], placeholder: 'Name'
+    %label Currency
+    = select_tag 'currency', options_for_select(["USD", "GBP", "INR"])
+    %div.category_row
+      = image_tag 'grey_plus.png', class: 'plus_button tool_tip', alt: 'add', title: 'Add more categories with limit'
+      %label Category Name and Limit
+      .category_limits
+        
+      
+    %div.email_row
+      = image_tag 'grey_plus.png', class: 'email_plus_button tool_tip', alt: 'add', title: 'Share this budget list'
+      %label Share with someone
+      .user_emails
+    
+    %p
+      = submit_tag 'Save', class: 'btn btn-mini btn-info', id: 'new_record'
+    

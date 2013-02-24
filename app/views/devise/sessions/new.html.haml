@@ -1,0 +1,29 @@
+%div.wrapper
+  .left-bar
+    %h3 Welcome to Spendster
+    %p
+      Spendster is a way to manage your spends.
+      Create a budget list, set limits for each
+      category. And start adding spends
+      
+  .right-bar
+    %div{ class: 'row' }
+      %div{ class: 'span5 offset2' }
+        %h1 Sign in
+        = form_for(resource, :as => resource_name, :url => session_path(resource_name), :html => { :class => "well"}) do |f|
+        
+          = devise_error_messages!
+        
+          %div
+            = f.label :email
+            = f.email_field :email
+          %div
+            = f.label :password
+            = f.password_field :password
+          - if devise_mapping.rememberable?
+            %div
+              %label.checkbox
+                = f.check_box :remember_me
+                Remember me
+          %div= f.submit "Sign in", class: 'btn btn-info'
+        = render "devise/shared/links"

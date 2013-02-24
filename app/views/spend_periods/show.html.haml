@@ -1,0 +1,147 @@
+:javascript
+  var report = #{@data} 
+  google.load("visualization", "1", {packages:["corechart"]});
+  google.setOnLoadCallback(drawChart);
+  function drawChart() {
+    console.log('change1');
+    var data = google.visualization.arrayToDataTable(report);
+
+    var options = {
+      title: 'Spend Activity',
+      colors: ['#ABC0C5', '#d2f7b4',  '#f28ab2', '#66cccc', '#ccd9d9'],
+      pieSliceTextStyle: {color: 'black'},
+      chartArea: { left: 75, top: 0, width: 450, height: 300},
+      width: 450,
+      height: 300
+    };
+
+    var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+    chart.draw(data, options);
+  }
+  
+#myModal.modal.hide.fade{"aria-hidden" => "true", "aria-labelledby" => "myModalLabel", :role => "dialog", :tabindex => "-1"}
+  .modal-header
+    Spends chart
+    %button.close{"aria-hidden" => "true", "data-dismiss" => "modal", :type => "button"} ×
+  .modal-body
+    #chart_div
+%div.wrapper
+  .left-bar
+    %p
+      %h2 Add Spends
+      = form_tag record_spend_period_spends_path(@record, @spend_period), class: 'well sidebar-form', id: 'new_spend' do
+    
+        = select_tag "categories", options_for_select(@categories)
+        %br
+        = text_field_tag 'amount', params[:amount], placeholder: 'Amount'
+        %br
+        = text_field_tag 'notes', params[:notes], placeholder: 'Notes'
+    
+        %br
+        - if @spend_period.archived?
+          = submit_tag 'Add', class: 'btn btn-mini btn-info', disabled: true
+        - else
+          = submit_tag 'Add', class: 'btn btn-mini btn-info'
+        
+  .right-bar
+    %ul.breadcrumb
+      %li
+        = link_to 'All Budget Lists', records_path
+        >
+      %li
+        = link_to "#{@record.name}", record_path(@record)
+        >
+      %li.active Spends
+      %span
+        %li
+          %a{"data-toggle" => "modal", :href => "#myModal", :role => "button", id: 'graph_lightbox'} Report
+        |
+        %li= link_to 'Archives', archives_path
+        |
+        %li= link_to 'Export', record_spend_period_path(@record, @spend_period, format: 'csv')
+
+    .span10
+      - if @spend_period.archived?
+        You have finished spending within the time period, please view the spends in the
+        = link_to 'Archive', archives_path
+
+      - else
+        - if @spends.blank?
+          .alert.alert-block.alert-info
+            %button.close{"data-dismiss" => "alert", :type => "button"} ×
+            %h4 Spends
+            Hello there, looks like you have not spent anything so far, start spending
+            and add your spends here.
+        - else
+          - total_spent = @spend_period.total_spent
+          - total_amount = @spend_period.total_amount
+          - total_left = total_amount - total_spent
+          - amount_bar_class = total_left < 0 ? 'alert alert-error' : 'alert alert-warning'
+          - percentage = percent_of(total_spent, total_amount)
+          - percent = number_to_percentage(percentage, :precision => 0)
+          - percent_message = percentage > 100 ? "100%" : percent
+          
+          - total_spent_with_currency = number_to_currency(total_spent, :unit => currency[@record.currency])
+          - total_amount_with_currency = number_to_currency(total_amount, :unit => currency[@record.currency])
+          - total_left_with_currency = number_to_currency(total_left, :unit => currency[@record.currency])
+          
+          %div{class: amount_bar_class}
+            %button.close{"data-dismiss" => "alert", :type => "button", title: 'Hide'} x
+            - if (total_spent == 0 && total_left == 0 && total_amount == 0)
+              Start adding spends
+            - else
+              Total Limit:
+              %span.amount
+                = total_amount_with_currency
+              Spent:
+              %span.amount
+                = total_spent_with_currency
+
+              Amount left:
+              %span.amount
+                = total_left_with_currency
+              
+          %span.progress_message
+            = "Spent #{percent_message}"
+          - if percentage <= 80
+            - progress_class = 'progress-info'
+          - elsif 80 <= percentage && percentage <= 100
+            - progress_class = 'progress-warning'
+          - elsif percentage >= 100
+            - progress_class = 'progress-danger'
+
+          
+              
+          %div{ class: "progress #{progress_class}"}
+            .bar{:style => "width: #{percent}"}
+
+        %p
+          - @spends.each do |spend|
+            %table{ class: 'table table-bordered table-hover', id: 'spends_table'}
+              - category_limit  = number_to_currency(spend.category_limit, :unit => currency[@record.currency])
+              - category_spends = number_to_currency(spend.total_spent(spend.category_name), :unit => currency[@record.currency])
+              - exceeded_limit = (spend.total_spent(spend.category_name) > spend.category_limit) ? 'exceeded_limit' : 'not_exceeded'
+              %thead
+                %th{colspan: '4'}
+                  = spend.category_name
+                  Limit:
+                  = category_limit
+                  Spent:
+                  %span{class: "#{exceeded_limit}"}
+                    = category_spends
+                %th
+                  = link_to 'x', record_spend_period_spend_path(@record, @spend_period, spend), :method => :delete, class: 'close', :data => { :confirm => 'Are you sure you want to delete?' }, title: 'Delete entire spend'
+                  
+              %tbody
+                - spend.spends_over_periods.each do |s|
+                  %tr
+                    %td
+                      .amount= number_to_currency(s.amount, :unit => currency[@record.currency])
+                    %td= s.notes
+                    %td= friendly_date(s.created_at.to_s)
+                    %td= s.get_user_name
+                    %td
+                      = link_to 'x', record_spend_period_spend_spends_over_period_path(@record, @spend_period, spend, s), :method => :delete, class: 'close', title: 'Delete spend'
+          
+          = paginate @spends
+                    
